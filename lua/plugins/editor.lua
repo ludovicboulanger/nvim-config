@@ -23,7 +23,7 @@ return {
 
       -- Terminal
       {
-        "<C-\\>",
+        "<leader>t",
         function()
           require("snacks").terminal()
         end,
@@ -106,4 +106,3 @@ return {
     end,
   },
 }
-

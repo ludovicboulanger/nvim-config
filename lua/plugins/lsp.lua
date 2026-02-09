@@ -49,7 +49,7 @@ return {
       local capabilities = require("blink.cmp").get_lsp_capabilities()
 
       require("mason-lspconfig").setup({
-        ensure_installed = { "basedpyright", "lua_ls" },
+        ensure_installed = { "pyright", "lua_ls" },
         automatic_installation = false,
 
         handlers = {
@@ -57,20 +57,6 @@ return {
           function(server_name)
             lspconfig[server_name].setup({ capabilities = capabilities })
           end,
-
-          ["basedpyright"] = function()
-            lspconfig.basedpyright.setup({
-              capabilities = capabilities,
-              settings = {
-                basedpyright = {
-                  analysis = {
-                    typeCheckingMode = "standard", -- The modification you wanted
-                  },
-                },
-              },
-            })
-          end,
-
           ["lua_ls"] = function()
             lspconfig.lua_ls.setup({
               capabilities = capabilities,
@@ -114,7 +100,36 @@ return {
         function()
           require("dap").continue()
         end,
-        desc = "Continue",
+        desc = "Start / Continue",
+      },
+      -- NEW KEYS FOR STEPPING:
+      {
+        "<leader>do",
+        function()
+          require("dap").step_over()
+        end,
+        desc = "Step Over",
+      },
+      {
+        "<leader>di",
+        function()
+          require("dap").step_into()
+        end,
+        desc = "Step Into",
+      },
+      {
+        "<leader>dO",
+        function()
+          require("dap").step_out()
+        end,
+        desc = "Step Out",
+      },
+      {
+        "<leader>dt",
+        function()
+          require("dap").terminate()
+        end,
+        desc = "Terminate Session",
       },
     },
     config = function()
