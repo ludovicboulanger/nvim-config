@@ -79,7 +79,7 @@ return {
           prepend_args = { "--indent-type", "Spaces", "--indent-width", "2" },
         },
       },
-      format_on_save = { timeout_ms = 500, lsp_fallback = true },
+      --format_on_save = { timeout_ms = 500, lsp_fallback = true },
     },
   },
 
@@ -134,19 +134,36 @@ return {
     },
     config = function()
       local dap, dapui = require("dap"), require("dapui")
-      dapui.setup()
-      dap.listeners.before.attach.dapui_config = function()
-        dapui.open()
-      end
-      dap.listeners.before.launch.dapui_config = function()
-        dapui.open()
-      end
-      dap.listeners.before.event_terminated.dapui_config = function()
-        dapui.close()
-      end
-      dap.listeners.before.event_exited.dapui_config = function()
-        dapui.close()
-      end
+      dapui.setup({
+        layouts = {
+          {
+            elements = {
+              { id = "scopes", size = 0.25 }, -- Variables
+              { id = "breakpoints", size = 0.25 }, -- List of active breakpoints
+              { id = "stacks", size = 0.25 }, -- Call stack
+              { id = "watches", size = 0.25 }, -- <--- HERE IS THE WATCH TAB
+            },
+            size = 40, -- Width of the sidebar
+            position = "left",
+          },
+          {
+            elements = {
+              "repl",
+              "console",
+            },
+            size = 0.25,
+            position = "bottom",
+          },
+        },
+      })
+      -- 1. Open immediately when we start
+      dap.listeners.after.event_initialized["dapui_config"] = function() dapui.open() end
+      dap.listeners.before.launch["dapui_config"] = function() dapui.open() end
+      -- 2. FORCE Open when we hit a breakpoint or finish a step
+      dap.listeners.before.event_stopped["dapui_config"] = function() dapui.open() end
+      -- 3. Close ONLY when the session is completely dead
+      dap.listeners.before.event_terminated["dapui_config"] = function() dapui.close() end
+      dap.listeners.before.event_exited["dapui_config"] = function() dapui.close() end
 
       local mason_path = vim.fn.stdpath("data") .. "/mason/packages/debugpy"
       if vim.loop.fs_stat(mason_path) then
