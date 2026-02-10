@@ -10,8 +10,74 @@ return {
       terminal = { enabled = true },
       notifier = { enabled = true },
       dashboard = { enabled = true }, -- Optional: Gives you the start screen
+      picker = {
+        enabled = true,
+        win = {
+          input = {
+            keys = {
+              ["<c-y>"] = { "confirm", mode = { "n", "i" } },
+            },
+          },
+          list = {
+            keys = {
+              ["<c-y>"] = { "confirm", mode = { "n", "i" } },
+            },
+          },
+        },
+      },
     },
     keys = {
+      -- Picker
+      {
+        "gd",
+        function()
+          Snacks.picker.lsp_definitions()
+        end,
+        desc = "Go to Definition",
+      },
+      {
+        "gr",
+        function()
+          Snacks.picker.lsp_references()
+        end,
+        nowait = true,
+        desc = "Go to References",
+      },
+      {
+        "gI",
+        function()
+          Snacks.picker.lsp_implementations()
+        end,
+        desc = "Go to Implementation",
+      },
+      {
+        "gy",
+        function()
+          Snacks.picker.lsp_type_definitions()
+        end,
+        desc = "Go to Type Definition",
+      },
+      {
+        "<leader>ff",
+        function()
+          Snacks.picker.files()
+        end,
+        desc = "Find Files",
+      },
+      {
+        "<leader>fg",
+        function()
+          Snacks.picker.grep()
+        end,
+        desc = "Live Grep",
+      },
+      {
+        "<leader>fb",
+        function()
+          Snacks.picker.buffers()
+        end,
+        desc = "Buffers",
+      },
       -- File Explorer
       {
         "<leader>e",
@@ -57,28 +123,6 @@ return {
     },
   },
 
-  -- 2. Fzf-Lua (Search / Fuzzy Finder)
-  {
-    "ibhagwan/fzf-lua",
-    dependencies = { "nvim-tree/nvim-web-devicons" },
-    keys = {
-      { "<leader><space>", "<cmd>FzfLua files<cr>", desc = "Find Files" },
-      { "<leader>ff", "<cmd>FzfLua files<cr>", desc = "Find Files" },
-      { "<leader>fr", "<cmd>FzfLua oldfiles<cr>", desc = "Recent Files" },
-      { "<leader>sg", "<cmd>FzfLua live_grep<cr>", desc = "Grep (Search Code)" },
-      { "<leader>fb", "<cmd>FzfLua buffers<cr>", desc = "Buffers" },
-      { "<leader>sh", "<cmd>FzfLua help_tags<cr>", desc = "Help Pages" },
-    },
-    opts = {
-      "default-title",
-      winopts = {
-        height = 0.85,
-        width = 0.80,
-        preview = { layout = "vertical", vertical = "down:45%" },
-      },
-    },
-  },
-
   -- 3. Which-Key
   {
     "folke/which-key.nvim",
@@ -97,11 +141,19 @@ return {
   -- 4. Treesitter
   {
     "nvim-treesitter/nvim-treesitter",
-    build = ":TSUpdate",
+    branch = "master",
     lazy = false,
-    opts = {
-      ensure_installed = { "python", "lua", "vim", "vimdoc", "bash", "markdown" },
-      highlight = { enable = true },
-   }
- },
+    build = ":TSUpdate",
+    config = function()
+      require("nvim-treesitter.configs").setup({
+        ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "markdown", "markdown_inline" },
+        sync_install = false,
+        auto_install = true,
+        highlight = {
+          enable = true,
+          additional_vim_regex_highlighting = false,
+        },
+      })
+    end,
+  },
 }

@@ -79,7 +79,7 @@ return {
           prepend_args = { "--indent-type", "Spaces", "--indent-width", "2" },
         },
       },
-      --format_on_save = { timeout_ms = 500, lsp_fallback = true },
+      format_on_save = { timeout_ms = 500, lsp_fallback = true },
     },
   },
 

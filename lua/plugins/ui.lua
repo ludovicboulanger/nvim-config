@@ -17,7 +17,7 @@ return {
     "nvim-lualine/lualine.nvim",
     event = "VeryLazy",
     opts = {
-      options = { theme = "catppuccin" },
+      options = { theme = "tokyonight" },
     },
   },
 
@@ -41,4 +41,3 @@ return {
     },
   },
 }
-
