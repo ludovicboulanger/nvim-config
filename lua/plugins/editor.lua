@@ -10,6 +10,7 @@ return {
       terminal = { enabled = true },
       notifier = { enabled = true },
       dashboard = { enabled = true }, -- Optional: Gives you the start screen
+      indent = { enabled = true },
       picker = {
         enabled = true,
         win = {
