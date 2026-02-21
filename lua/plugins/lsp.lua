@@ -4,7 +4,7 @@ return {
     "williamboman/mason.nvim",
     build = ":MasonUpdate",
     opts = {
-      ensure_installed = { "debugpy", "black", "isort", "stylua" },
+      ensure_installed = { "debugpy", "stylua" },
     },
     config = function(_, opts)
       require("mason").setup(opts)
@@ -43,43 +43,84 @@ return {
   -- 3. LSP Config
   {
     "neovim/nvim-lspconfig",
-    dependencies = { "williamboman/mason.nvim", "williamboman/mason-lspconfig.nvim", "saghen/blink.cmp" },
+    dependencies = {
+      "williamboman/mason.nvim",
+      "williamboman/mason-lspconfig.nvim",
+      "saghen/blink.cmp",
+    },
+    event = { "BufReadPre", "BufNewFile" },
     config = function()
-      local lspconfig = require("lspconfig")
       local capabilities = require("blink.cmp").get_lsp_capabilities()
+      local util = require("lspconfig.util") -- still valid for root_pattern
 
+      require("mason").setup()
       require("mason-lspconfig").setup({
-        ensure_installed = { "pyright", "lua_ls" },
-        automatic_installation = false,
+        ensure_installed = { "pyright", "ruff", "lua_ls" },
+      })
 
-        handlers = {
-          -- Default handler
-          function(server_name)
-            lspconfig[server_name].setup({ capabilities = capabilities })
-          end,
-          ["lua_ls"] = function()
-            lspconfig.lua_ls.setup({
-              capabilities = capabilities,
-              settings = { Lua = { diagnostics = { globals = { "vim" } } } },
-            })
-          end,
+      -- Lua
+      vim.lsp.config("lua_ls", {
+        capabilities = capabilities,
+        settings = {
+          Lua = {
+            diagnostics = { globals = { "vim" } },
+          },
         },
       })
+      vim.lsp.enable("lua_ls")
+
+      -- Ruff (lint + fixes)
+      vim.lsp.config("ruff", {
+        capabilities = capabilities,
+        root_markers = { "pyproject.toml", "requirements.txt", ".git" },
+      })
+      vim.lsp.enable("ruff")
+
+      -- Pyright (types only)
+      vim.lsp.config("pyright", {
+        capabilities = capabilities,
+        root_markers = { "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", ".git" },
+        settings = {
+          pyright = {
+            disableOrganizeImports = true,
+          },
+          python = {
+            analysis = {
+              typeCheckingMode = "basic",
+              diagnosticMode = "workspace",
+
+              -- Let Ruff Handle these
+              reportUnusedImport = "none",
+              reportUnusedVariable = "none",
+              reportUnusedFunction = "none",
+              reportUnusedClass = "none",
+            },
+          },
+        },
+      })
+      vim.lsp.enable("pyright")
     end,
   },
-
   -- 4. Formatting
   {
     "stevearc/conform.nvim",
     event = { "BufReadPre", "BufNewFile" },
     opts = {
-      formatters_by_ft = { python = { "isort", "black" }, lua = { "stylua" } },
+      formatters_by_ft = {
+        python = {
+          -- To run the Ruff formatter.
+          "ruff_format",
+          -- To organize the imports.
+          "ruff_organize_imports",
+        },
+        lua = { "stylua" },
+      },
       formatters = {
         stylua = {
           prepend_args = { "--indent-type", "Spaces", "--indent-width", "2" },
         },
       },
-      format_on_save = { timeout_ms = 500, lsp_fallback = true },
+      format_on_save = { timeout_ms = 3000, lsp_fallback = false },
     },
   },
 
@@ -157,13 +198,23 @@ return {
         },
       })
       -- 1. Open immediately when we start
-      dap.listeners.after.event_initialized["dapui_config"] = function() dapui.open() end
-      dap.listeners.before.launch["dapui_config"] = function() dapui.open() end
+      dap.listeners.after.event_initialized["dapui_config"] = function()
+        dapui.open()
+      end
+      dap.listeners.before.launch["dapui_config"] = function()
+        dapui.open()
+      end
       -- 2. FORCE Open when we hit a breakpoint or finish a step
-      dap.listeners.before.event_stopped["dapui_config"] = function() dapui.open() end
+      dap.listeners.before.event_stopped["dapui_config"] = function()
+        dapui.open()
+      end
       -- 3. Close ONLY when the session is completely dead
-      dap.listeners.before.event_terminated["dapui_config"] = function() dapui.close() end
-      dap.listeners.before.event_exited["dapui_config"] = function() dapui.close() end
+      dap.listeners.before.event_terminated["dapui_config"] = function()
+        dapui.close()
+      end
+      dap.listeners.before.event_exited["dapui_config"] = function()
+        dapui.close()
+      end
 
       local mason_path = vim.fn.stdpath("data") .. "/mason/packages/debugpy"
       if vim.loop.fs_stat(mason_path) then
